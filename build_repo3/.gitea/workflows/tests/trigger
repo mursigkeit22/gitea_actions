@@ -1,0 +1,66 @@
+name: trigger
+on: push
+
+jobs:
+  filter_job:
+    runs-on: build
+    outputs:
+      app1: ${{ steps.filter.outputs.app1 }}
+      app2: ${{ steps.filter.outputs.app2 }}
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v3
+    - name: Filter changed apps
+      uses: https://github.com/dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          app1:
+            - 'app1dir/**'
+          app2:
+            - 'app2dir/**' 
+        base: ${{ github.ref_name }}
+   
+
+    
+
+  app1_trigger_job:
+    runs-on: build
+    needs: filter_job
+    uses: ./.gitea/workflows/app1.yaml
+    secrets: inherit
+    with:
+      run_permit: ${{ needs.filter_job.outputs.app1 }}
+
+
+  app2_trigger_job:
+    runs-on: build
+    needs: filter_job
+    uses: ./.gitea/workflows/app2.yaml
+    secrets: inherit
+    with:
+      run_permit: ${{ needs.filter_job.outputs.app2 }}
+
+  # app1_trigger_job:
+  #   runs-on: build
+  #   needs: filter_job
+  #   uses: Valerie/build_repo1/.gitea/workflows/app1.yaml@main
+  #   secrets: inherit
+  #   with:
+  #     run_permit: ${{ needs.filter_job.outputs.app1 }}
+
+  # app2_trigger_job:
+  #   runs-on: build
+  #   needs: filter_job
+  #   uses: Valerie/build_repo1/.gitea/workflows/app2.yaml@main
+  #   secrets: inherit
+  #   with:
+  #     run_permit: ${{ needs.filter_job.outputs.app2 }}
+      
+
+    
+    
+  
+    
+     
+      

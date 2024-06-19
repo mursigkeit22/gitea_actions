@@ -1,0 +1,78 @@
+name: app1 pipeline # IT WORKS
+on:
+  workflow_call:
+    inputs:
+      run_permit:
+        required: true
+        type: string
+
+    
+env:
+  image_name: app1
+  app_name: app1
+  workdir: app1dir
+  dockerfile_path: Dockerfile
+  
+
+jobs:
+  build-app1:
+    if: ${{ inputs.run_permit == 'true' }}
+    runs-on: build
+    env:
+      password: ${{ secrets.G_PASS}}
+      user: ${{ secrets.G_USER}}
+      domain: ${{ secrets.G_DOMAIN}}
+    outputs: 
+      full_image_name: ${{ steps.name_definition.outputs.full_image_name}}
+      image_tag: ${{ steps.tag_definition.outputs.image_tag}}
+   
+    steps:
+           
+      - name: Define image tag
+        id: tag_definition
+        run: echo "image_tag=${{ github.ref_name }}-`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_OUTPUT
+
+      - name: Check image tag
+        run: echo ${{ steps.tag_definition.outputs.image_tag }}
+
+      - name: Define image name
+        id: name_definition
+        run: echo "full_image_name=${{ env.domain }}/${{ env.user }}/$image_name:${{ steps.tag_definition.outputs.image_tag }}" >> $GITHUB_OUTPUT
+ 
+      - name: Check image name
+        run: echo ${{ steps.name_definition.outputs.full_image_name }}
+     
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          repository: Valerie/example
+          ref: ${{ gitea.ref }} #refs/heads/main
+      
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
+
+      - name: Build docker image # image stays on runner's machine
+        run: |
+          docker --version
+          cd $workdir
+          docker build . --file $dockerfile_path --tag ${{ steps.name_definition.outputs.full_image_name }}               
+
+      - name: Login into Container Registry
+        run: docker login -u "${{ env.user }}" -p "${{ env.password }}" "https://${{ env.domain }}"
+
+      - name: Push docker image to Container Registry
+        run: docker push ${{ steps.name_definition.outputs.full_image_name }}    
+
+  deploy-app1:
+    runs-on: build
+    if: ${{ inputs.run_permit == 'true' }} # doesn't work here also
+    needs: build-app1
+    uses: Valerie/deploy_rep/.gitea/workflows/trigger-deploy.yaml@main
+    secrets: inherit
+    with: 
+      build_branch: ${{ github.ref_name }}
+      image_tag: ${{ needs.build-app1.outputs.image_tag }}
+      run_permit: ${{ inputs.run_permit }}
+      app_name: ${{ env.app_name }}
+    
+

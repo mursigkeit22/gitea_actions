@@ -1,0 +1,93 @@
+name: trigger deploy 
+
+on:
+  workflow_call:
+    inputs:
+
+      build_branch:
+        required: true
+        type: string
+
+      image_tag:
+        required: true
+        type: string
+
+      run_permit:
+        required: true
+        type: string
+      
+      app_name:
+        required: true
+        type: string
+      
+      registry: 
+        required: true
+        type: string
+      
+      build_result: 
+        required: true
+        type: string
+
+env:
+  NOMAD_ADDR: ${{ secrets.NOMAD_ADDR}}
+  NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN}}
+  password: ${{ secrets.G_PASS}} 
+  user: ${{secrets.G_USER}}
+  domain: ${{secrets.G_DOMAIN}}
+  repository: atlas/deploy_repo2
+  repo_token: ${{ secrets.REPO_TOKEN}}
+
+jobs:
+  deploy_trigger_main:
+    runs-on: build
+    if: ${{ inputs.run_permit == 'true' && inputs.build_branch == 'main' && inputs.build_result == 'success'}}
+    steps:
+
+      - name: Check out code with deploy action 
+        uses: https://gitea.com/actions/checkout@v3
+        with:
+          repository: atlas/build_repo2
+          ref: ${{ gitea.ref }}
+          token: ${{ env.repo_token }}
+      
+      - name: Deploy
+        uses: ./.gitea/actions/deploy_action
+        with: 
+          app_name: ${{ inputs.app_name }}
+          image_tag: ${{ inputs.image_tag }}
+          registry: ${{ inputs.registry }}
+          domain: ${{ env.domain }}
+          user: ${{ env.user }}
+          password: ${{ env.password }}
+          repo_token: ${{ env.repo_token }}
+          repository: ${{ env.repository }}
+          build_branch: ${{ inputs.build_branch }}
+          NOMAD_ADDR: ${{ env.NOMAD_ADDR }}
+          NOMAD_TOKEN: ${{ env.NOMAD_TOKEN }}
+
+  deploy_trigger_dev:
+    runs-on: build
+    if: ${{ inputs.run_permit == 'true' && inputs.build_branch == 'dev' && inputs.build_result == 'success'}}
+    steps:
+
+      - name: Check out code with deploy action 
+        uses: https://gitea.com/actions/checkout@v3
+        with:
+          repository: atlas/build_repo2
+          ref: ${{ gitea.ref }}
+          token: ${{ env.repo_token }}
+
+      - name: Deploy
+        uses: ./.gitea/actions/deploy_action
+        with: 
+          app_name: ${{ inputs.app_name }}
+          image_tag: ${{ inputs.image_tag }}
+          registry: ${{ inputs.registry }}
+          domain: ${{ env.domain }}
+          user: ${{ env.user }}
+          password: ${{ env.password }}
+          repo_token: ${{ env.repo_token }}
+          repository: ${{ env.repository }}
+          build_branch: ${{ inputs.build_branch }}
+          NOMAD_ADDR: ${{ env.NOMAD_ADDR }}
+          NOMAD_TOKEN: ${{ env.NOMAD_TOKEN }}

@@ -1,0 +1,30 @@
+name: test levant variables
+on: 
+  workflow_call:
+  push:
+
+
+jobs:
+  job1:
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR}}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN}}
+      DOCKER_REGISTRY_PW: ${{ secrets.DOCKER_REGISTRY_PW}}
+    runs-on: build
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          repository: Valerie/deploy_rep
+          ref: main
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
+      - run: | 
+            cd levant
+            ls
+            docker rm -f my_levant_container || true
+            docker create -e NOMAD_ADDR=http://10.10.122.58:4646 -e NOMAD_TOKEN=35fa7690-3c58-a44b-7fcb-6d08074e2eeb --name my_levant_container hashicorp/levant:latest deploy -ignore-no-changes -var-file test1.common.yaml -var "docker_registry_pw=${{ env.DOCKER_REGISTRY_PW }}" app1.nomad
+            docker cp job/app1.nomad my_levant_container:app1.nomad
+            docker cp vars/test1.common.yaml my_levant_container:test1.common.yaml
+            docker start -i my_levant_container
+            docker rm -f my_levant_container

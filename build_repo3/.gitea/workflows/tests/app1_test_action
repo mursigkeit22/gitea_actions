@@ -1,0 +1,52 @@
+name: app1 pipeline 
+on:
+  workflow_call:
+    inputs:
+      run_permit:
+        required: true
+        type: string
+
+    
+env:
+  image_name: app1
+  app_name: app1
+  workdir: app1dir
+  dockerfile_path: Dockerfile
+  
+
+jobs:
+  build-app1:
+    if: ${{ inputs.run_permit == 'true' }}
+    runs-on: build
+    env:
+      password: ${{ secrets.G_PASS}}
+      user: ${{ secrets.G_USER}}
+      domain: ${{ secrets.G_DOMAIN}}
+    outputs: 
+      image_tag: ${{ steps.custom_action.outputs.image_tag}}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          repository: Valerie/example
+          ref: ${{ gitea.ref }} #refs/heads/main
+      
+      # - name: Use custom action # works
+      #   id: custom_action
+      #   uses: https://gitea.cargoonline.net/Valerie/example/app1dir/build_action@main
+      - name: Use custom action # this works too!
+        id: custom_action
+        uses: ./app1dir/build_action
+      - run: echo "image_tag ${{ steps.custom_action.outputs.image_tag }}"
+        shell: bash
+      - run: echo "WE CHANGED IT"
+
+
+
+
+
+    
+
+
+
+    

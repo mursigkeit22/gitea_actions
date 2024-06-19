@@ -1,0 +1,47 @@
+name: file_conditions
+on: push
+
+
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    # Set job outputs to values from filter step
+    outputs:
+      app1: ${{ steps.filter.outputs.app1 }}
+      app2: ${{ steps.filter.outputs.app2 }}
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v3
+    - uses: https://github.com/dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          app1:
+            - 'app1dir/**'
+          app2:
+            - 'app2dir/**'
+
+  app1_build_job:
+    needs: job1
+    if: ${{ needs.job1.outputs.app1 == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "app1dir was changed"
+      - run: echo ${{ needs.job1.outputs.app1 }}
+      - run: echo ${{ needs.job1.outputs.app2 }}
+      - run: echo ${{ needs.job1.result }}
+
+  app2_build_job:
+    needs: job1
+    if: ${{ needs.job1.outputs.app2 == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "app2dir was changed"
+      - run: echo ${{ needs.job1.outputs.app1 }}
+      - run: echo ${{ needs.job1.outputs.app2 }}
+      - run: echo ${{ needs.job1.result }}
+
+
+
+  

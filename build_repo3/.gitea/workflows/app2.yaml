@@ -1,0 +1,86 @@
+name: app2 pipeline 
+on:
+  push:
+    paths:
+      - 'app2dir/**'
+
+    
+env:
+  image_name: app2
+  registry: atlas
+  app_name: app2
+  password: ${{ secrets.G_PASS}}
+  user: ${{ secrets.G_USER}}
+  domain: ${{ secrets.G_DOMAIN}}
+  repo_token: ${{ secrets.REPO_TOKEN}}
+  
+
+
+jobs:
+  build-app2:
+    runs-on: build
+    outputs: 
+      image_tag: ${{ steps.build_push_app2.outputs.image_tag}}
+    env:
+      repository: atlas/build_repo3
+      workdir: app2dir
+      dockerfile_path: Dockerfile
+
+    steps:
+
+      - name: Check out repository with build action
+        uses: https://gitea.com/actions/checkout@v3
+        with:
+          repository: ${{ env.repository }}
+          ref: ${{ gitea.ref }} 
+          token: ${{ env.repo_token }}
+  
+  
+      - name: Build and push app2 image
+        id: build_push_app2
+        uses: ./.gitea/actions/build_action
+
+        with: 
+          image_name: ${{ env.image_name }}
+          registry: ${{ env.registry }}
+          app_name: ${{ env.app_name }}
+          workdir: ${{ env.workdir }}
+          dockerfile_path: ${{ env.dockerfile_path }}
+          domain: ${{ env.domain }}
+          user: ${{ env.user }}
+          password: ${{ env.password }}
+          repo_token: ${{ env.repo_token }}
+          repository: ${{ env.repository }}
+          build_branch: ${{ github.ref_name }}
+
+  deploy-app2:
+    runs-on: build
+    needs: build-app2
+    env:
+      repository: atlas/deploy_repo3
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR}}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN}}
+
+    steps:
+
+      - name: Check out repository with deploy action
+        uses: https://gitea.com/actions/checkout@v3
+        with:
+          repository: ${{ env.repository }}
+          ref: main 
+          token: ${{ env.repo_token }}
+
+      - name: Deploy to Nomad
+        uses: ./.gitea/actions/deploy_action
+        with: 
+          app_name: ${{ env.app_name }}
+          image_tag: ${{ needs.build-app2.outputs.image_tag }}
+          registry: ${{ env.registry }}
+          domain: ${{ env.domain }}
+          user: ${{ env.user }}
+          password: ${{ env.password }}
+          repo_token: ${{ env.repo_token }}
+          repository: ${{ env.repository }}
+          build_branch: ${{ github.ref_name }}
+          NOMAD_ADDR: ${{ env.NOMAD_ADDR }}
+          NOMAD_TOKEN: ${{ env.NOMAD_TOKEN }}

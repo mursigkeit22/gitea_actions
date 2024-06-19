@@ -1,0 +1,44 @@
+name: short sha
+on: push
+
+env:
+  DAY_OF_WEEK: Monday
+  # TEST_SHA: ${{ echo $GITHUB_SHA | cut -c1-8}} # doesn't work. here bash syntax is used, but the workflow variables are not run through any shell.
+  # No virtual machine has been started when the workflow file is parsed, so there's no shell to run things through. 
+
+jobs:
+  job1:
+    runs-on: build
+    outputs:
+        CI_COMMIT_SHORT_SHA: ${{ steps.sha.outputs.short_sha }}
+    steps:
+      - name: Short sha
+        id: sha
+        run: echo "short_sha=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_OUTPUT
+      - name: Check outputs1
+        run: echo ${{ steps.sha.outputs.short_sha }} #works
+      - name: Check outputs2
+        run: echo ${{ steps.sha.outputs.CI_COMMIT_SHORT_SHA }} #doesnt work
+      - name: Print out sha
+        run: echo ${GITHUB_SHA}
+      - run: echo "Today is $DAY_OF_WEEK!" #works
+
+  job2:
+    needs: job1
+    runs-on: build
+    steps:
+      - run: echo ${{ needs.job1.outputs.CI_COMMIT_SHORT_SHA }} #works
+      - name: Print out sha
+        run: echo ${GITHUB_SHA}
+      - run: echo "Today is $DAY_OF_WEEK!" #works
+
+  job3:
+    needs: job1
+    runs-on: build
+    uses: Valerie/example/.gitea/workflows/app1/test_sha.yaml@main
+    with:
+      #CI_COMMIT_SHORT_SHA: hop
+      CI_COMMIT_SHORT_SHA: ${{ needs.job1.outputs.CI_COMMIT_SHORT_SHA }}
+
+
+

@@ -1,0 +1,14 @@
+name: test caller in step # doesn't work. "uses" in steps call an action, not a workflow
+on: push
+
+jobs:
+  job1:
+    runs-on: build
+    steps:
+      - run: echo "first job"
+  call-workflow-passing-data:
+    runs-on: build
+    steps:
+      - name: step1
+        uses: https://gitea.testonline.net/Valerie/deploy_rep/.gitea/workflows/test1.yaml@main
+

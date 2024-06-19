@@ -1,0 +1,24 @@
+name: test creating docker image
+on: push
+
+jobs:
+  build:
+    runs-on: build
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
+      - name: build image # image stays on runner's machine
+        run: |
+          docker --version
+          docker images
+          cd app1dir/
+          docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+          docker images
+        
+      - run: |
+          ls
+          cd app1dir/
+          pwd
+          ls

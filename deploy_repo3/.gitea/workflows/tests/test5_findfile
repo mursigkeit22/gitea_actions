@@ -1,0 +1,28 @@
+name: test levant job
+on: 
+  push:
+
+
+jobs:
+  job1:
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR}}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN}}
+    runs-on: build
+    steps:
+      
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          repository: Valerie/deploy_rep
+          ref: main
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
+      - run: ls -a
+      - run: pwd
+      - run: | 
+           cd levant/job
+           ls
+           docker run -v /workspace/Valerie/deploy_rep/levant/job:/ hashicorp/levant:latest render app1.nomad #invalid mount config
+           #-v /workspace/Valerie/deploy_rep/levant/job:/data # cannot find file
+     

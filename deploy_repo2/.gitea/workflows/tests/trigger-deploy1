@@ -1,0 +1,72 @@
+name: trigger deploy 
+
+on:
+  workflow_call:
+    inputs:
+
+      build_branch:
+        required: true
+        type: string
+
+      image_tag:
+        required: true
+        type: string
+
+      run_permit:
+        required: true
+        type: string
+      
+      app_name:
+        required: true
+        type: string
+
+      registry:
+        required: true
+        type: string
+
+env:
+  NOMAD_ADDR: ${{ secrets.NOMAD_ADDR}}
+  NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN}}
+  password: ${{ secrets.DOCKER_REGISTRY_PW}} 
+  user: ${{secrets.G_USER}}
+  domain: ${{secrets.G_DOMAIN}}
+  repository: atlas/deploy_repo2
+  repo_token: ${{ secrets.REPO_TOKEN}}
+
+jobs:
+  deploy_trigger_main:
+    runs-on: build
+    if: ${{ inputs.run_permit == 'true' && inputs.build_branch == 'main' }}
+    steps:
+      - run: echo "HOP I'M HERE HOP HOP"
+  #     - name: Deploy
+  #       uses: https://gitea.cargoonline.net/Valerie/deploy_repo1/.gitea/actions/deploy_action@main
+  #       with: 
+  #         app_name: ${{ inputs.app_name }}
+  #         image_tag: ${{ inputs.image_tag }}
+  #         domain: ${{ env.domain }}
+  #         user: ${{ env.user }}
+  #         password: ${{ env.password }}
+  #         repo_token: ${{ env.repo_token }}
+  #         repository: ${{ env.repository }}
+  #         build_branch: ${{ inputs.build_branch }}
+  #         NOMAD_ADDR: ${{ env.NOMAD_ADDR }}
+  #         NOMAD_TOKEN: ${{ env.NOMAD_TOKEN }}
+
+  # deploy_trigger_dev:
+  #   runs-on: build
+  #   if: ${{ inputs.run_permit == 'true' && inputs.build_branch == 'dev' }}
+  #   steps:
+  #     - name: Deploy
+  #       uses: https://gitea.cargoonline.net/Valerie/deploy_repo1/.gitea/actions/deploy_action@main
+  #       with: 
+  #         app_name: ${{ inputs.app_name }}
+  #         image_tag: ${{ inputs.image_tag }}
+  #         domain: ${{ env.domain }}
+  #         user: ${{ env.user }}
+  #         password: ${{ env.password }}
+  #         repo_token: ${{ env.repo_token }}
+  #         repository: ${{ env.repository }}
+  #         build_branch: ${{ inputs.build_branch }}
+  #         NOMAD_ADDR: ${{ env.NOMAD_ADDR }}
+  #         NOMAD_TOKEN: ${{ env.NOMAD_TOKEN }}

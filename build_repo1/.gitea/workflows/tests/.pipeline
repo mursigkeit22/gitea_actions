@@ -1,0 +1,35 @@
+name: build and deploy
+on: push
+#TODO: pass branch to ref
+
+env:
+  image_name: app1
+  workdir: app1dir
+  image_tag:
+
+jobs:
+  build-app1:
+    runs-on: build
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          repository: Valerie/example
+          ref: ${{ gitea.ref }}
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
+      - name: Build docker image # image stays on runner's machine
+        run: |
+          docker --version
+          cd app1dir/
+          docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+        
+      - name: Login into Container Registry
+        env:
+          password: ${{ secrets.G_PASS}}
+        run: | 
+          docker login -u Valerie -p "${{ env.password }}" https://gitea.testonline.net/
+      - name: Push docker image to Container Registry
+        run: docker push gitea.testonline.net/valerie/app1:test1
+
+  deploy-app1:

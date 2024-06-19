@@ -1,0 +1,55 @@
+name: app2 pipeline 
+on:
+  workflow_call:
+    inputs:
+      run_permit:
+        required: true
+        type: string
+
+    
+env:
+  repository: Valerie/build_repo1
+  image_name: app2
+  app_name: app2
+  workdir: app2dir
+  dockerfile_path: Dockerfile
+  password: ${{ secrets.G_PASS}}
+  user: ${{ secrets.G_USER}}
+  domain: ${{ secrets.G_DOMAIN}}
+  repo_token: ${{ secrets.REPO_TOKEN}}
+  
+
+jobs:
+  build-app2:
+    if: ${{ inputs.run_permit == 'true' }}
+    runs-on: build
+    outputs: 
+      image_tag: ${{ steps.build_push_app2.outputs.image_tag}}
+   
+    steps:
+      - name: Build and push app2 image
+        id: build_push_app2
+        uses: https://gitea.testonline.net/Valerie/build_repo1/.gitea/actions/build_action@main
+        with: 
+          image_name: ${{ env.image_name }}
+          app_name: ${{ env.app_name }}
+          workdir: ${{ env.workdir }}
+          dockerfile_path: ${{ env.dockerfile_path }}
+          domain: ${{ env.domain }}
+          user: ${{ env.user }}
+          password: ${{ env.password }}
+          repo_token: ${{ env.repo_token }}
+          repository: ${{ env.repository }}
+          build_branch: ${{ github.ref_name }}
+
+  deploy-app2:
+    runs-on: build
+    needs: build-app2
+    uses: Valerie/deploy_repo1/.gitea/workflows/trigger-deploy.yaml@main
+    secrets: inherit
+    with: 
+      build_branch: ${{ github.ref_name }}
+      image_tag: ${{ needs.build-app2.outputs.image_tag }}
+      run_permit: ${{ inputs.run_permit }}
+      app_name: ${{ env.app_name }}
+      build_result: ${{ needs.build-app2.result }}

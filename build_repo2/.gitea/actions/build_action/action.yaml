@@ -1,0 +1,69 @@
+name: 'app build action'
+description: 'build app image and push it to registery'
+inputs:
+ 
+  image_name: 
+    required: true
+  registry:
+    required: true
+  app_name: 
+    required: true
+  workdir: 
+    required: true
+  dockerfile_path: 
+    required: true
+  domain:
+    required: true
+  user:
+    required: true
+  password:
+    required: true
+  repo_token:
+    required: true
+  repository:
+    required: true 
+  build_branch:
+    required: true
+  
+  
+outputs:
+  image_tag:
+    value: ${{ steps.tag_definition.outputs.image_tag }}
+runs:
+  using: "composite"
+  steps:
+    - name: Define image tag
+      id: tag_definition
+      run: echo "image_tag=${{ github.ref_name }}-`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_OUTPUT
+
+    - name: Check image tag
+      run: echo ${{ steps.tag_definition.outputs.image_tag }}
+
+    - name: Define image name
+      id: name_definition
+      run: echo "full_image_name=${{ inputs.domain }}/${{ inputs.registry }}/${{ inputs.image_name }}:${{ steps.tag_definition.outputs.image_tag }}" >> $GITHUB_OUTPUT
+
+    - name: Check image name
+      run: echo ${{ steps.name_definition.outputs.full_image_name }}
+    
+    - name: Check out repository code
+      uses: https://gitea.com/actions/checkout@v3
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.build_branch }} 
+        token: ${{ inputs.repo_token }}
+    
+    - name: Install Docker
+      run: curl -fsSL https://get.docker.com | sh
+
+    - name: Build docker image # image stays on runner's machine
+      run: |
+        docker --version
+        cd ${{ inputs.workdir }}
+        docker build . --file ${{ inputs.dockerfile_path }} --tag ${{ steps.name_definition.outputs.full_image_name }}                         
+
+    - name: Login into Container Registry
+      run: docker login -u "${{ inputs.user }}" -p "${{ inputs.password }}" "https://${{ inputs.domain }}"
+
+    - name: Push docker image to Container Registry
+      run: docker push ${{ steps.name_definition.outputs.full_image_name }}    

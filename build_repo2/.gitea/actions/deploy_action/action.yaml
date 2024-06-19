@@ -1,0 +1,52 @@
+name: 'app deploy action'
+description: 'deploy to nomad'
+inputs:
+  
+  app_name: 
+    required: true
+  image_tag: 
+    required: true
+  registry:
+    required: true
+  domain:
+    required: true
+  user:
+    required: true
+  password:
+    required: true
+  repo_token:
+    required: true
+  repository:
+    required: true
+  build_branch:
+    required: true
+  NOMAD_ADDR:
+    required: true
+  NOMAD_TOKEN:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: echo "deploy ${{ inputs.app_name }} on ${{ inputs.build_branch }}"
+
+    - name: Check out repository code (deploy)
+      uses: https://gitea.com/actions/checkout@v3
+      with:
+        repository: ${{ inputs.repository }}
+        ref: main
+        token: ${{ inputs.repo_token }}
+    
+    - name: Install Docker (deploy)
+      run: curl -fsSL https://get.docker.com | sh
+    
+    - name: Deploy to Nomad
+      run: | 
+        docker rm -f levant_container || true
+        docker create -e NOMAD_ADDR=${{ inputs.NOMAD_ADDR }} -e NOMAD_TOKEN=${{ inputs.NOMAD_TOKEN }} --name levant_container hashicorp/levant:latest deploy -ignore-no-changes -force-count -force -var-file ${{ inputs.build_branch }}.common.yaml -var-file ${{ inputs.app_name }}.yaml -var "docker_registry_pw=${{ inputs.password }}" -var "version_tag=${{ inputs.image_tag }}" -var "docker_registry=https://${{ inputs.domain }}/${{ inputs.registry }}/" -var "docker_registry_user=${{ inputs.user }}" ${{ inputs.app_name }}.nomad
+        docker cp levant/job/${{ inputs.app_name }}.nomad levant_container:${{ inputs.app_name }}.nomad
+        docker cp levant/vars/${{ inputs.build_branch }}.common.yaml levant_container:${{ inputs.build_branch }}.common.yaml
+        docker cp levant/vars/${{ inputs.build_branch }}/${{ inputs.app_name }}.yaml levant_container:${{ inputs.app_name }}.yaml
+
+        docker start -i levant_container
+        docker rm -f levant_container

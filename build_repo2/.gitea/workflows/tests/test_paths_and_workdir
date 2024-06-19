@@ -1,0 +1,30 @@
+name: app1 pipeline
+
+on: 
+  push:
+    paths:
+      - 'app1dir/**'
+jobs:
+  build1:
+    runs-on: build
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - run: |
+          cd app1dir/
+          pwd
+          ls
+          echo "Building the app"
+  
+  build2:
+    runs-on: build
+    defaults:
+      run:
+        working-directory: ./app1dir
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - run: |
+          pwd
+          ls
+          echo "Building the app"

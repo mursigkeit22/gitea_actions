@@ -1,0 +1,22 @@
+name: test levant 
+on: 
+  workflow_call:
+
+
+jobs:
+  job1:
+    runs-on: build
+    steps:
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
+      - run: docker images
+      - run: docker run --rm hashicorp/levant:latest version
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          repository: Valerie/deploy_rep
+          ref: main
+      - name: list files 
+        run: ls 
+
+          

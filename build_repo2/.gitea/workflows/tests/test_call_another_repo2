@@ -1,0 +1,11 @@
+name: test caller
+on: push
+
+jobs:
+  job1:
+    runs-on: build
+    steps:
+      - run: echo "first job "
+  call-workflow-passing-data1:
+    runs-on: build
+    uses: valerie/deploy_rep/.gitea/workflows/test10.yaml@main

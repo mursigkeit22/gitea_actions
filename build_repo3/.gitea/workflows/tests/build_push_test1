@@ -1,0 +1,24 @@
+name: test build and push
+on: push
+
+jobs:
+  build_push:
+    runs-on: build
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
+      - name: build image # image stays on runner's machine
+        run: |
+          cd app1dir/
+          docker build . --file Dockerfile --tag gitea.cargoonline.net/valerie/app1:test1
+        
+      - name: docker login
+        env:
+          password: ${{ secrets.G_PASS}}
+        run: | 
+          docker login -u Valerie -p "${{ env.password }}" https://gitea.cargoonline.net/
+      - name: docker push
+        run: docker push gitea.cargoonline.net/valerie/app1:test1
+          

@@ -1,0 +1,34 @@
+name: test levant job
+on: 
+  push:
+
+
+jobs:
+  job1:
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR}}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN}}
+      DOCKER_REGISTRY_PW: ${{ secrets.DOCKER_REGISTRY_PW}}
+    runs-on: build
+    steps:
+      - run: pwd
+      - run: ls -a
+      - run: |
+           cd /
+           ls -al
+      - run: |
+           cd /workspace
+           ls -al
+            #  cd /data
+            #  ls -al 
+      # - name: Check out repository code
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: Valerie/deploy_rep
+      #     ref: main
+      # - run: ls -a
+      # - run: pwd
+      # - run: |
+      #        cd /data_runs
+      #        ls -al
+      

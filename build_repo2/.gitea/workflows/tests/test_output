@@ -1,0 +1,33 @@
+name: outputs
+on: push
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.step1.outputs.output1 }}
+      output2: ${{ steps.step2.outputs.output2 }}
+    steps:
+      - name: step1
+        id: step1
+        run: |
+          date -Is > output1
+          cat output1
+          echo "output1=$(cat output1)" >> $GITHUB_OUTPUT
+      - name: step2
+        id: step2
+        run: |
+          cat /proc/sys/kernel/random/uuid > output2
+          cat output2
+          echo "output2=$(cat output2)" >> $GITHUB_OUTPUT
+      - run: echo {{ steps.step1.outputs.output1 }}
+      - run: echo ${{ steps.step1.outputs.output1 }}
+      - run: echo " [${{ steps.step1.outputs.output1 }} ]"
+      - run: echo  $steps.step1.outputs.output2
+  job2:
+    needs: job1
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ needs.job1.outputs.output1 }}
+      - run: echo ${{ needs.job1.outputs.output2 }}
+      - run: echo ${{ needs.job1.result }}

@@ -1,0 +1,14 @@
+name: test sha 
+on: workflow_call
+
+jobs:
+  job_sha:
+    needs: job1
+    runs-on: build
+    steps:
+      - run: echo ${{ needs.job1.outputs.CI_COMMIT_SHORT_SHA }} 
+      - name: Print out sha
+        run: echo ${GITHUB_SHA}
+      - run: echo "Today is $DAY_OF_WEEK!"
+
+

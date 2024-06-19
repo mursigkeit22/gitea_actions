@@ -1,0 +1,39 @@
+name: test levant job
+on: 
+  push:
+
+
+jobs:
+  job1:
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR}}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN}}
+      DOCKER_REGISTRY_PW: ${{ secrets.DOCKER_REGISTRY_PW}}
+    runs-on: build
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          repository: Valerie/deploy_rep
+          ref: main
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
+      - run: docker images
+      - run: docker run -v "$GITHUB_WORKSPACE:/data" --rm hashicorp/levant:latest version
+      
+      - run: ls -a
+      - run: pwd
+      - run: |
+             cd levant/job
+             ls
+      - run: echo $PWD
+      - run: printenv
+      - run: | 
+            cd levant/job
+            ls
+            docker rm -f my_levant_container || true
+            docker create --name my_levant_container hashicorp/levant:latest render app1.nomad
+            docker cp app1.nomad my_levant_container:app1.nomad
+            docker start -i my_levant_container
+            docker rm -f my_levant_container
+      

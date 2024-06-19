@@ -1,0 +1,92 @@
+name: trigger deploy #IT WORKS
+
+on:
+  workflow_call:
+    inputs:
+
+      build_branch:
+        required: true
+        type: string
+
+      image_tag:
+        required: true
+        type: string
+
+      run_permit:
+        required: true
+        type: string
+      
+      app_name:
+        required: true
+        type: string
+
+env:
+  NOMAD_ADDR: ${{ secrets.NOMAD_ADDR}}
+  NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN}}
+  DOCKER_REGISTRY_PW: ${{ secrets.DOCKER_REGISTRY_PW}} # password
+  g_user: ${{secrets.G_USER}}
+  g_domain: ${{secrets.G_DOMAIN}}
+
+jobs:
+  # test_input_job:
+  #   if: ${{ inputs.run_permit == 'true' }}
+  #   runs-on: build
+  #   steps:
+  #     - run: echo "${{ inputs.build_branch }}"
+  #     - run: echo "${{ inputs.run_permit }}"
+  #     - run: echo "${{ inputs.image_tag }}"
+  #     - run: echo "${{ inputs.app_name }}"
+  #     - run: echo ${{ env.DOCKER_REGISTRY_PW }} # works
+      
+     
+
+
+  deploy_trigger_main:
+    runs-on: build
+    if: ${{ inputs.run_permit == 'true' && inputs.build_branch == 'main' }}
+    steps:
+      - run: echo "deploy ${{ inputs.app_name }} on ${{ inputs.build_branch }}"
+
+      - name: Check out repository code (deploy)
+        uses: actions/checkout@v3
+        with:
+          repository: Valerie/deploy_rep
+          ref: main
+          token: d3511c558f331a6096b7a6acc4732fcb5c720633
+      
+      - name: Install Docker (deploy)
+        run: curl -fsSL https://get.docker.com | sh
+        
+      - name: Deploy to Nomad
+        run: | 
+            docker rm -f levant_container || true
+            docker create -e NOMAD_ADDR=${{ env.NOMAD_ADDR }} -e NOMAD_TOKEN=${{ env.NOMAD_TOKEN }} --name levant_container hashicorp/levant:latest deploy -ignore-no-changes -force-count -force -var-file ${{ inputs.build_branch }}.common.yaml -var-file ${{ inputs.app_name }}.yaml -var "docker_registry_pw=${{ env.DOCKER_REGISTRY_PW }}" -var "version_tag=${{ inputs.image_tag }}" -var "docker_registry=https://${{ env.g_domain }}/${{ env.g_user }}/" -var "docker_registry_user=${{ env.g_user }}" ${{ inputs.app_name }}.nomad
+            docker cp levant/job/${{ inputs.app_name }}.nomad levant_container:${{ inputs.app_name }}.nomad
+            docker cp levant/vars/${{ inputs.build_branch }}.common.yaml levant_container:${{ inputs.build_branch }}.common.yaml
+            docker cp levant/vars/${{ inputs.build_branch }}/${{ inputs.app_name }}.yaml levant_container:${{ inputs.app_name }}.yaml
+
+            docker start -i levant_container
+            docker rm -f levant_container
+
+
+
+
+      # - run: echo "TRIGGER MAIN BRANCH"
+      # - run: echo "nomad file name levant/job/${{ inputs.app_name }}.nomad" #nomad file name levant/job/app1.nomad
+      # - run: echo "nomad var-file name1  levant/vars/${{ inputs.build_branch }}.common.yaml" #nomad var-file name1  levant/vars/main.common.yaml
+      # - run: echo "nomad var-file name2  levant/vars/${{ inputs.build_branch }}/${{ inputs.app_name }}.yaml" #nomad var-file name2  levant/vars/main/app1.yaml
+      # - run: echo "package reg address https://${{ env.g_domain }}/${{ env.g_user }}/" #package reg address https://***/***/
+
+
+      
+
+
+  # trigger_dev:
+  #   runs-on: build
+  #   if: ${{ inputs.run_permit == 'true' && inputs.build_branch == 'dev' }}
+  #   steps:
+  #     - run: echo "TRIGGER DEV BRANCH"
+  
+  
+
+      

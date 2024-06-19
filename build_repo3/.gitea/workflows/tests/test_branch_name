@@ -1,0 +1,23 @@
+name: branch name
+on: push
+
+jobs:
+  job1:
+    runs-on: build
+    outputs: 
+      FULL_IMAGE_NAME: ${{ steps.name_definition.outputs.full_image_name}}
+
+   
+    steps:
+      - name: Define image name
+        id: name_definition
+        run: echo "full_image_name=gitea.cargoonline.net/valerie/app1:${{ github.ref_name }}-`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_OUTPUT
+  job2:
+    needs: job1
+    runs-on: build
+    steps:
+      - run: echo ${{ needs.job1.outputs.FULL_IMAGE_NAME }}
+
+
+
+    

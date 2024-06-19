@@ -1,0 +1,8 @@
+datacenter: 'trunk'
+region: 'ru'
+envprefix: 'test-gitea-main'
+version_tag: ""
+docker_registry: ""
+docker_registry_user: ""
+force_pull: "true"
+docker_registry_pw: ""

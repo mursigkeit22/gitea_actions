@@ -1,0 +1,27 @@
+name: test levant job
+on: 
+  push:
+
+
+jobs:
+  job1:
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR}}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN}}
+      DOCKER_REGISTRY_PW: ${{ secrets.DOCKER_REGISTRY_PW}}
+    runs-on: build
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          repository: Valerie/deploy_rep
+          ref: main
+      - name: Install Docker
+        run: curl -fsSL https://get.docker.com | sh
+      - name: Run Docker #DOESNT WORK
+        uses: https://github.com/addnab/docker-run-action@v3
+        with:
+            image: hashicorp/levant:latest
+            options: -v /workspace/Valerie/deploy_rep:/data
+            run: |
+                version

@@ -1,0 +1,20 @@
+name: test envs
+on: 
+  push:
+
+jobs:
+  job1:
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR}}
+    runs-on: build
+    steps:
+      - run: |
+          echo "${{ env.NOMAD_ADDR }}" # nothing
+          printenv
+      - run: echo github.ref # github.ref
+      - run: echo $github.ref # .ref
+      - run: echo "${{ github.ref }}" #refs/heads/main
+      - run: echo $GITHUB_REF_NAME # main 
+      - run: echo "${{ GITHUB_REF_NAME }}" # nothing
+      - run: echo "${{ gitea.ref }}" # refs/heads/main
+      - run: echo "${{ gitea.ref_name }}" # main

@@ -1,0 +1,47 @@
+name: action path in env 
+on:
+  push:
+    
+
+    
+env:
+  image_name: app1
+  registry: atlas
+  app_name: app1
+  password: ${{ secrets.G_PASS}}
+  user: ${{ secrets.G_USER}}
+  domain: ${{ secrets.G_DOMAIN}}
+  repo_token: ${{ secrets.REPO_TOKEN}}
+  
+  
+
+
+jobs:
+  build-app1:
+    runs-on: build
+    outputs: 
+      image_tag: ${{ steps.build_push_app1.outputs.image_tag}}
+    env:
+      repository: atlas/build_repo3
+      workdir: app1dir
+      dockerfile_path: Dockerfile
+      action: https://gitea.cargoonline.net/atlas/actions/build_action@main
+   
+    steps:
+  
+      - name: Build and push app1 image
+        id: build_push_app1
+        uses: ${{ env.action }}
+
+        with: 
+          image_name: ${{ env.image_name }}
+          registry: ${{ env.registry }}
+          app_name: ${{ env.app_name }}
+          workdir: ${{ env.workdir }}
+          dockerfile_path: ${{ env.dockerfile_path }}
+          domain: ${{ env.domain }}
+          user: ${{ env.user }}
+          password: ${{ env.password }}
+          repo_token: ${{ env.repo_token }}
+          repository: ${{ env.repository }}
+          build_branch: ${{ github.ref_name }}

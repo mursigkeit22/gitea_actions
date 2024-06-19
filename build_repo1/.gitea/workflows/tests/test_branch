@@ -1,0 +1,21 @@
+name: test running workflow depending on branch
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  job1:
+    runs-on: build
+    steps:
+      - run: echo "🔎 The name of your branch is ${{ gitea.ref }} and your repository is ${{ gitea.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: List files in the repository
+        run: |
+          ls ${{ gitea.workspace }}  
+          cd app2dir/
+          pwd
+          ls        
+      - run: echo "🍏 This job's status is ${{ job.status }}. "
+      
